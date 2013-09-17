@@ -7,6 +7,12 @@ Elixir wrapper for riak-erlang-client
 Install dependencies
 
 ```
+mix deps.get
+```
+
+Compile
+
+```
 mix
 ```
 
