@@ -10,7 +10,9 @@ defmodule Elixiak.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    []
+    [ registered: [:elixiak],
+    mod: { Elixiak, [] },
+    env: [host: '127.0.0.1', port: 8087] ]
   end
 
   defp deps do

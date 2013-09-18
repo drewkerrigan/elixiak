@@ -5,11 +5,16 @@ end
 defmodule ElixiakTest do
   use ExUnit.Case
 
-  test "save_and_find" do
-  	d = User.new("Drew", "hithere")
-  	d.save
+  test "save_find_delete" do
+  	u1 = User.new("Drew", "hithere")
+  	u1.save!
   	
-  	data = User.find("Drew").data
-  	assert(data == "hithere")
+  	u2 = User.find("Drew")
+  	assert(u2.data == "hithere")
+
+	User.delete("Drew")
+
+	u3 = User.find("Drew")
+  	assert(u3 == nil)
   end
 end
