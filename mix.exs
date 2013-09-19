@@ -11,11 +11,11 @@ defmodule Elixiak.Mixfile do
   # Configuration for the OTP application
   def application do
     [ registered: [:elixiak],
-    mod: { Elixiak, [] },
-    env: [host: '127.0.0.1', port: 8087] ]
+    mod: { Elixiak, [] }]
   end
 
   defp deps do
-    [{ :riakc, git: "https://github.com/basho/riak-erlang-client.git" }]
+    [{ :riakc, github: "basho/riak-erlang-client" },
+     { :json,  github: "cblage/elixir-json"}]
   end
 end
