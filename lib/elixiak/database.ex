@@ -29,14 +29,11 @@ defmodule Elixiak.Database do
 				end
 			end
 
+			def delete(doc) do delete(doc.model, doc.primary_key) end
 			def delete(mod, key) do
 				bucket = Elixiak.Util.model_bucket(mod)
 
 				:gen_server.call(:elixiak, { :delete, bucket, key })
-			end
-
-			def delete(doc) do
-				delete(doc.model, doc.primary_key)
 			end
 		end
 	end

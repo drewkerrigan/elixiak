@@ -53,14 +53,14 @@ end
 With a key
 
 ```
-user = u User.new(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
+user = User.new(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
 Db.put user
 ```
 
 Without a key
 
 ```
-user = u User.new(first_name: "Drew", last_name: "Kerrigan", age: 200)
+user = User.new(first_name: "Drew", last_name: "Kerrigan", age: 200)
 key = Db.put user
 ```
 
