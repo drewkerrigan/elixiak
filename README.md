@@ -82,7 +82,7 @@ assert(u2.last_name == "Kerrigan")
 
 ```
 user = user.first_name("Harry")
-Db.update u3
+Db.update user
 ```
 
 ###Delete an object
