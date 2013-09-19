@@ -15,6 +15,25 @@ end
 defmodule ElixiakTest do
 	use ExUnit.Case
 
+	test "update" do
+		u = User.new(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
+		Db.put u
+
+		u2 = Db.find User, "drew"
+		assert(u2.last_name == "Kerrigan")
+
+		u3 = u2.first_name("Harry")
+		Db.update u3
+
+		u4 = Db.find User, "drew"
+		assert(u4.first_name == "Harry")
+
+		Db.delete User, "drew"
+
+		u4 = Db.find User, "drew"
+		assert(u4 == nil)
+	end
+
 	test "save_find_delete" do
 		u = User.new(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
 		Db.put u

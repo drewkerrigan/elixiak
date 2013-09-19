@@ -3,17 +3,32 @@ defmodule Elixiak.Model do
 	defmacro __using__(_opts) do
 		quote do
 			import Elixiak.Model.Document
+			alias Elixiak.Util
 
-			def from_json(json) do
-				Elixiak.Util.unserialize_document(__MODULE__, json)
+			def bucket() do
+				__MODULE__.__model__(:name)
 			end
 
-			def from_json(key, json) do
-				doc = Elixiak.Util.unserialize_document(__MODULE__, key, json)
+			def serialize(doc) do
+				{:ok, json} = JSON.encode(__MODULE__.Obj.__obj__(:obj_kw, doc))
+
+				key = case doc.key do
+					nil -> :undefined
+					value -> value
+				end
+
+				{bucket(), key, json, doc.metadata}
 			end
 
-			def to_json(doc) do
-				Elixiak.Util.serialize_document(doc)
+			def unserialize(nil) do nil end
+			def unserialize({json, key, metadata}) do
+				{:ok, decoded} = JSON.decode(json)
+				__MODULE__.new([{:metadata, metadata} | [{:key, key} | Util.list_to_args(HashDict.to_list(decoded), [])]])
+			end
+
+			def unserialize(json) do
+				{:ok, decoded} = JSON.decode(json)
+				__MODULE__.new(Util.list_to_args(HashDict.to_list(decoded), []))
 			end
 		end
 	end

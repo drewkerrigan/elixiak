@@ -16,21 +16,11 @@ defmodule Elixiak.Obj do
       @before_compile Elixiak.Obj
       @elixiak_fields []
       @record_fields []
-      @elixiak_primary_key nil
 
       @elixiak_model opts[:model]
       field(:model, :virtual, default: opts[:model])
-
-      case opts[:primary_key] do
-        nil ->
-          field(:key, :string, primary_key: true)
-        false ->
-          :ok
-        { name, type } ->
-          field(name, type, primary_key: true)
-        other ->
-          raise ArgumentError, message: ":primary_key must be false, nil or { name, type }"
-      end
+      field(:key, :virtual, default: nil)
+      field(:metadata, :virtual, default: nil)
     end
   end
 
@@ -38,30 +28,19 @@ defmodule Elixiak.Obj do
   defmacro __before_compile__(env) do
     mod = env.module
 
-    primary_key = Module.get_attribute(mod, :elixiak_primary_key)
     all_fields  = Module.get_attribute(mod, :elixiak_fields) |> Enum.reverse
-
     record_fields = Module.get_attribute(mod, :record_fields)
     Record.deffunctions(record_fields, env)
 
     fields = Enum.filter(all_fields, fn({ _, opts }) -> opts[:type] != :virtual end)
 
     [ elixiak_fields(fields),
-      elixiak_primary_key(primary_key),
       elixiak_helpers(fields, all_fields) ]
   end
 
   def __field__(mod, name, type, opts) do
     check_type!(type)
     fields = Module.get_attribute(mod, :elixiak_fields)
-
-    if opts[:primary_key] do
-      if pk = Module.get_attribute(mod, :elixiak_primary_key) do
-        raise ArgumentError, message: "primary key already defined as `#{pk}`"
-      else
-        Module.put_attribute(mod, :elixiak_primary_key, name)
-      end
-    end
 
     clash = Enum.any?(fields, fn({ prev, _ }) -> name == prev end)
     if clash do
@@ -70,8 +49,6 @@ defmodule Elixiak.Obj do
 
     record_fields = Module.get_attribute(mod, :record_fields)
     Module.put_attribute(mod, :record_fields, record_fields ++ [{ name, opts[:default] }])
-
-    opts = Enum.reduce([:default, :primary_key], opts, &Dict.delete(&2, &1))
     Module.put_attribute(mod, :elixiak_fields, [{ name, [type: type] ++ opts }|fields])
   end
 
@@ -104,22 +81,6 @@ defmodule Elixiak.Obj do
     end ]
   end
 
-  defp elixiak_primary_key(primary_key) do
-    quote do
-      def __obj__(:primary_key), do: unquote(primary_key)
-
-      if unquote(primary_key) do
-        def primary_key(record), do: unquote(primary_key)(record)
-        def primary_key(value, record), do: unquote(primary_key)(value, record)
-        def update_primary_key(fun, record), do: unquote(:"update_#{primary_key}")(fun, record)
-      else
-        def primary_key(_record), do: nil
-        def primary_key(_value, record), do: record
-        def update_primary_key(_fun, record), do: record
-      end
-    end
-  end
-
   defp elixiak_helpers(fields, all_fields) do
     field_names = Enum.map(fields, &elem(&1, 0))
     all_field_names = Enum.map(all_fields, &elem(&1, 0))
@@ -132,15 +93,11 @@ defmodule Elixiak.Obj do
       end
 
       def __obj__(:obj_kw, obj, opts // []) do
-        filter_pk = opts[:primary_key] == false
-        primary_key = __obj__(:primary_key)
-
         [_module|values] = tuple_to_list(obj)
         zipped = Enum.zip(unquote(all_field_names), values)
 
         Enum.filter(zipped, fn { field, _ } ->
-          __obj__(:field, field) &&
-            (not filter_pk || (filter_pk && field != primary_key))
+          __obj__(:field, field)
         end)
       end
     end

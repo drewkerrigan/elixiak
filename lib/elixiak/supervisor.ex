@@ -1,12 +1,12 @@
 defmodule Elixiak.Supervisor do
 	use Supervisor.Behaviour
 
-	def start_link(state) do
-		:supervisor.start_link(__MODULE__, state)
+	def start_link() do
+		:supervisor.start_link(__MODULE__, nil)
 	end
 
-	def init(state) do
-		children = [ worker(Elixiak.Server, [state]) ]
+	def init(_) do
+		children = [ worker(Elixiak.Database, []) ]
 		supervise children, strategy: :one_for_one
 	end
 end

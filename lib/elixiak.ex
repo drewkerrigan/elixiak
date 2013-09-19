@@ -3,8 +3,6 @@ defmodule Elixiak do
 	defrecord State, socket_pid: nil
 
 	def start(_type, _state) do
-    	state = State.new(socket_pid: nil)
-
-		Elixiak.Supervisor.start_link(state)
+		Elixiak.Supervisor.start_link()
 	end
 end

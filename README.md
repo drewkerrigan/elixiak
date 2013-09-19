@@ -67,7 +67,7 @@ key = Db.put user
 From JSON
 
 ```
-user = User.from_json(json_string)
+user = User.unserialize(json_string)
 Db.put user
 ```
 
@@ -76,6 +76,13 @@ Db.put user
 ```
 user = Db.find User, key
 assert(u2.last_name == "Kerrigan")
+```
+
+###Update an object
+
+```
+user = user.first_name("Harry")
+Db.update u3
 ```
 
 ###Delete an object
