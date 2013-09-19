@@ -78,13 +78,19 @@ user = Db.find User, key
 assert(u2.last_name == "Kerrigan")
 ```
 
-###Delete an object using key
+###Delete an object
+
+Using key
 
 ```
 Db.delete User, key
 ```
 
+Or object
 
+```
+Db.delete user
+```
 
 ###Run tests
 
