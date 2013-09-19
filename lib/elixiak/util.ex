@@ -20,6 +20,11 @@ defmodule Elixiak.Util do
 		mod.new(list_to_args(HashDict.to_list(decoded), []))
 	end
 
+	def unserialize_document(mod, key, json) do
+		{:ok, decoded} = JSON.decode(json)
+		mod.new([{:key, key} | list_to_args(HashDict.to_list(decoded), [])])
+	end
+
 	def list_to_args([], accum) do
 		accum
 	end

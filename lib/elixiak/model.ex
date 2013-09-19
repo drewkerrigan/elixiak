@@ -8,6 +8,10 @@ defmodule Elixiak.Model do
 				Elixiak.Util.unserialize_document(__MODULE__, json)
 			end
 
+			def from_json(key, json) do
+				doc = Elixiak.Util.unserialize_document(__MODULE__, key, json)
+			end
+
 			def to_json(doc) do
 				Elixiak.Util.serialize_document(doc)
 			end

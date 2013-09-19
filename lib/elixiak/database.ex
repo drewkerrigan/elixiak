@@ -25,9 +25,7 @@ defmodule Elixiak.Database do
 				case result do
 					nil -> nil
 					value -> 
-						doc = mod.from_json(value)
-						doc.primary_key(key)
-						doc
+						mod.from_json(key, value)
 				end
 			end
 
@@ -38,7 +36,7 @@ defmodule Elixiak.Database do
 			end
 
 			def delete(doc) do
-				__MODULE__.delete(doc.model, doc.primary_key)
+				delete(doc.model, doc.primary_key)
 			end
 		end
 	end
