@@ -21,6 +21,7 @@ defmodule Elixiak.Obj do
       field(:model, :virtual, default: opts[:model])
       field(:key, :virtual, default: nil)
       field(:metadata, :virtual, default: nil)
+      field(:vclock, :virtual, default: nil)
     end
   end
 
