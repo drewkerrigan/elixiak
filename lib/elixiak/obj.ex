@@ -13,7 +13,6 @@ defmodule Elixiak.Obj do
     quote bind_quoted: [opts: opts] do
       import Elixiak.Obj
 
-      ##Active Record functions
       def save!(o) do
         Db.put o
       end
@@ -28,10 +27,10 @@ defmodule Elixiak.Obj do
         {:ok, json} = JSON.encode(o.__obj__(:obj_kw, o))
 
         robj = :riakc_obj.new(
-        o.bucket,
-        o.key, 
-        json,
-        o.content_type)
+          o.bucket,
+          o.key, 
+          json,
+          o.content_type)
 
         if o.vclock do robj = :riakc_obj.set_vclock(robj, o.vclock) end
         if o.metadata do robj = :riakc_obj.update_metadata(robj, o.metadata) end
@@ -50,6 +49,7 @@ defmodule Elixiak.Obj do
       field(:metadata, :virtual, default: nil)
       field(:vclock, :virtual, default: nil)
       field(:content_type, :virtual, default: "application/json")
+      field(:indexes, :virtual, default: [])
     end
   end
 
@@ -61,10 +61,12 @@ defmodule Elixiak.Obj do
     record_fields = Module.get_attribute(mod, :record_fields)
     Record.deffunctions(record_fields, env)
 
-    fields = Enum.filter(all_fields, fn({ _, opts }) -> opts[:type] != :virtual end)
+    fields = Enum.filter(all_fields, fn({ _, opts }) -> 
+      opts[:type] != :virtual 
+    end)
 
     [ elixiak_fields(fields),
-      elixiak_helpers(fields, all_fields) ]
+      elixiak_helpers(fields, all_fields)]
   end
 
   def __field__(mod, name, type, opts) do
@@ -77,6 +79,7 @@ defmodule Elixiak.Obj do
     end
 
     record_fields = Module.get_attribute(mod, :record_fields)
+
     Module.put_attribute(mod, :record_fields, record_fields ++ [{ name, opts[:default] }])
     Module.put_attribute(mod, :elixiak_fields, [{ name, [type: type] ++ opts }|fields])
   end
@@ -95,6 +98,7 @@ defmodule Elixiak.Obj do
   end
 
   defp elixiak_fields(fields) do
+
     quoted = Enum.map(fields, fn({ name, opts }) ->
       quote do
         def __obj__(:field, unquote(name)), do: unquote(opts)
@@ -103,10 +107,22 @@ defmodule Elixiak.Obj do
     end)
 
     field_names = Enum.map(fields, &elem(&1, 0))
+
+    indexes = Enum.filter_map(fields, 
+      fn({ _name, opts }) -> opts[:indexed] == true end, 
+      fn({ name, opts }) -> 
+        if opts[:type] == :integer do
+          {name, {:integer_index, "#{name}"}}
+        else
+          {name, {:binary_index, "#{name}"}}
+        end
+      end)
+
     quoted ++ [ quote do
       def __obj__(:field, _), do: nil
       def __obj__(:field_type, _), do: nil
       def __obj__(:field_names), do: unquote(field_names)
+      def __obj__(:indexes), do: unquote(indexes)
     end ]
   end
 

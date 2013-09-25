@@ -35,14 +35,16 @@ Db.configure(host: '127.0.0.1', port: 10017)
 
 This functionality is inspired by and derived from [Ecto](https://github.com/elixir-lang/ecto) by [Elixir Lang](http://elixir-lang.org/). For more information about the embedded document specifics, it is currently derived from Ecto's queryable macro and entity module.
 
+Specifying the "indexed: true" will automatically add that field and it's value as a secondary index in Riak
+
 ```
 defmodule User do
   use Elixiak.Model
 
   document "user" do
-    field :first_name, :string
+    field :first_name, :string, indexed: true
     field :last_name, :string
-    field :age, :integer, default: 18
+    field :age, :integer, default: 18, indexed: true
   end
 end
 ```
@@ -72,6 +74,17 @@ User.from_json(json_string).save!
 
 ```
 User.find(key)
+```
+
+###Using Secondary Index (Equality Query)
+
+```
+User.find(first_name: "Drew")
+```
+###Using Secondary Index (Range Query)
+
+```
+User.find(age: [20, 40])
 ```
 
 ###Delete an object
