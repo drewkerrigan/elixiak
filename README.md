@@ -28,7 +28,7 @@ mix
 
 ```
 Riak.start
-Db.configure(host: '127.0.0.1', port: 10017)
+Riak.configure(host: '127.0.0.1', port: 10017)
 ```
 
 ###Create a model with an embedded document

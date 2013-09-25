@@ -14,12 +14,12 @@ defmodule ElixiakTest do
 	setup do
 		#Abstract into an Elixiak Database module?
 		Riak.start
-		Db.configure(host: '127.0.0.1', port: 10017)
+		Riak.configure(host: '127.0.0.1', port: 10017)
 		:ok
 	end
 
 	test "ping" do
-		assert(Db.ping == :pong)
+		assert(Riak.ping == :pong)
 	end
 
 	test "secondary indexes" do

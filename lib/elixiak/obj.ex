@@ -14,11 +14,11 @@ defmodule Elixiak.Obj do
       import Elixiak.Obj
 
       def save!(o) do
-        Db.put o
+        Riak.put o
       end
 
       def delete!(o) do
-        Db.delete o.bucket, o.key
+        Riak.delete o.bucket, o.key
       end
 
       def to_robj(o) do

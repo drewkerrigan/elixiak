@@ -1,7 +1,3 @@
-defmodule Db do
-	use Riak.Client
-end
-
 defmodule Elixiak.Model do
 	defmacro __using__(_opts) do
 		quote do
@@ -15,21 +11,21 @@ defmodule Elixiak.Model do
       		end
 
       		def find([{field, [st, en]}]) do
-				{keys, _terms, _continuation} = Db.Index.query(bucket, __MODULE__.Obj.__obj__(:indexes)[field], st, en, [])
+				{keys, _terms, _continuation} = Riak.Index.query(bucket, __MODULE__.Obj.__obj__(:indexes)[field], st, en, [])
 				from_keys(keys, [])
 			end
 
       		def find([{field, value}]) do
-				{keys, _terms, _continuation} = Db.Index.query(bucket, __MODULE__.Obj.__obj__(:indexes)[field], value, [])
+				{keys, _terms, _continuation} = Riak.Index.query(bucket, __MODULE__.Obj.__obj__(:indexes)[field], value, [])
 				from_keys(keys, [])
 			end
 
       		def find(key) do
-				from_robj(Db.find bucket, key)
+				from_robj(Riak.find bucket, key)
 			end
 
 			def delete(key) do
-				Db.delete bucket, key
+				Riak.delete bucket, key
 			end
 
 			# Utility functions
