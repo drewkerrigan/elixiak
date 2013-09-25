@@ -1,87 +1,20 @@
-defmodule Elixiak.Model do
+defmodule Db do
+	use Riak.Client
+end
 
+defmodule Elixiak.Model do
 	defmacro __using__(_opts) do
 		quote do
 			import Elixiak.Model.Document
 			alias Elixiak.Util
+      		use Riak.Object
 
-			# Object Data Manipulation modules
-			defmodule Metadata do
-				def get(doc, key) do
-					doc.metadata(:riakc_obj.get_user_metadata_entry(doc.metadata, key))
-				end
-
-				def get_all(doc) do
-					doc.metadata(:riakc_obj.get_user_metadata_entries(doc.metadata))
-				end
-				
-				def delete_all(doc) do
-					doc.metadata(:riakc_obj.clear_user_metadata_entries(doc.metadata))
-				end
-				
-				def delete(doc, key) do
-					doc.metadata(:riakc_obj.delete_user_metadata_entry(doc.metadata, key))
-				end
-				
-				def put(doc, {key, value}) do
-					doc.metadata(:riakc_obj.set_user_metadata_entry(doc.metadata, {key, value}))
-				end
-			end
-			
-			defmodule Index do
-				def index_id({:binary_index, name}) do
-					"#{name}_bin"
-				end
-
-				def index_id({:integer_index, name}) do
-					"#{name}_int"
-				end
-
-				def get_bin(doc, {type, name}) do
-					doc.metadata(:riakc_obj.get_secondary_index(doc.metadata, {type, name}))
-				end
-
-				def get_all(doc) do
-					doc.metadata(:riakc_obj.get_secondary_indexes(doc.metadata))
-				end
-
-				def delete_all(doc) do
-					doc.metadata(:riakc_obj.clear_secondary_indexes(doc.metadata))
-				end
-				
-				def delete(doc, {type, name}) do
-					doc.metadata(:riakc_obj.delete_secondary_index(doc.metadata, index_id({type, name})))
-				end
-
-				def delete(doc, id) do
-					doc.metadata(:riakc_obj.delete_secondary_index(doc.metadata, id))
-				end
-
-				def put(doc, {type, name}, values) do
-					doc.metadata(:riakc_obj.set_secondary_index(doc.metadata, {{type, name}, values}))
-				end
+      		def find(key) do
+				from_robj(Db.find bucket, key)
 			end
 
-			defmodule Link do
-				def get(doc, tag) do
-					doc.metadata(:riakc_obj.get_links(doc.metadata, tag))
-				end
-
-				def get_all(doc) do
-					doc.metadata(:riakc_obj.get_all_links(doc.metadata))
-				end
-
-				def delete_all(doc) do
-					doc.metadata(:riakc_obj.clear_links(doc.metadata))
-				end
-
-				def delete(doc, tag) do
-					doc.metadata(:riakc_obj.delete_links(doc.metadata, tag))
-				end
-
-				def put(doc, mod, key) do
-					doc.metadata(:riakc_obj.set_link(doc.metadata, [{mod.bucket, key}]))
-				end
+			def delete(key) do
+				Db.delete bucket, key
 			end
 
 			# Utility functions
@@ -89,29 +22,32 @@ defmodule Elixiak.Model do
 				__MODULE__.__model__(:name)
 			end
 
-			def serialize(doc) do
-				{:ok, json} = JSON.encode(__MODULE__.Obj.__obj__(:obj_kw, doc))
+			def from_json(json) do
+				{:ok, decoded} = JSON.decode(robj.data)
+				__MODULE__.create(Util.list_to_args(HashDict.to_list(decoded), []))
+			end
 
-				key = case doc.key do
-					nil -> :undefined
-					value -> value
+			def from_robj(robj) do
+				case robj do
+					nil -> nil
+					robj -> 
+						{:ok, decoded} = JSON.decode(robj.data)
+
+						__MODULE__.new(Util.list_to_args(HashDict.to_list(decoded), []))
+							.key(robj.key)
+							.metadata(robj.metadata)
+							.vclock(robj.vclock)
+							.bucket(robj.bucket)
+							.content_type(robj.content_type)
 				end
-
-				{bucket(), key, json, doc.metadata, doc.vclock}
 			end
 
-			def unserialize(nil) do nil end
-			def unserialize({json, key, metadata, vclock}) do
-				{:ok, decoded} = JSON.decode(json)
-				candidate = __MODULE__.new(Util.list_to_args(HashDict.to_list(decoded), []))
-				candidate = candidate.key(key)
-				candidate = candidate.metadata(metadata)
-				candidate = candidate.vclock(vclock)
+			def create() do
+				__MODULE__.new()
 			end
-
-			def unserialize(json) do
-				{:ok, decoded} = JSON.decode(json)
-				__MODULE__.new(Util.list_to_args(HashDict.to_list(decoded), []))
+			def create(args) do
+				o = __MODULE__.new(args).bucket(bucket)
+				from_robj(RObj.from_robj(o.to_robj()))
 			end
 		end
 	end

@@ -10,12 +10,11 @@ defmodule Elixiak.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    [ registered: [:elixiak],
-    mod: { Elixiak, [] }]
+    []
   end
 
   defp deps do
-    [{ :riakc, github: "basho/riak-erlang-client" },
+    [{ :'riak-elixir-client', github: "drewkerrigan/riak-elixir-client" },
      { :json,  github: "cblage/elixir-json"}]
   end
 end

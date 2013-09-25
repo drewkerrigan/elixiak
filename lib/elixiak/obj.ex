@@ -13,6 +13,32 @@ defmodule Elixiak.Obj do
     quote bind_quoted: [opts: opts] do
       import Elixiak.Obj
 
+      ##Active Record functions
+      def save!(o) do
+        Db.put o
+      end
+
+      def delete!(o) do
+        Db.delete o.bucket, o.key
+      end
+
+      def to_robj(o) do
+        unless o.key do o = o.key(:undefined) end
+
+        {:ok, json} = JSON.encode(o.__obj__(:obj_kw, o))
+
+        robj = :riakc_obj.new(
+        o.bucket,
+        o.key, 
+        json,
+        o.content_type)
+
+        if o.vclock do robj = :riakc_obj.set_vclock(robj, o.vclock) end
+        if o.metadata do robj = :riakc_obj.update_metadata(robj, o.metadata) end
+
+        robj
+      end
+
       @before_compile Elixiak.Obj
       @elixiak_fields []
       @record_fields []
@@ -20,8 +46,10 @@ defmodule Elixiak.Obj do
       @elixiak_model opts[:model]
       field(:model, :virtual, default: opts[:model])
       field(:key, :virtual, default: nil)
+      field(:bucket, :virtual, default: nil)
       field(:metadata, :virtual, default: nil)
       field(:vclock, :virtual, default: nil)
+      field(:content_type, :virtual, default: "application/json")
     end
   end
 

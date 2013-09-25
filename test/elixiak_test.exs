@@ -1,7 +1,3 @@
-defmodule Db do
-	use Elixiak.Database, host: '127.0.0.1', port: 8087
-end
-
 defmodule User do
 	use Elixiak.Model
 
@@ -15,61 +11,39 @@ end
 defmodule ElixiakTest do
 	use ExUnit.Case
 
-	test "update" do
-		u = User.new(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
-		Db.put u
-
-		u2 = Db.find User, "drew"
-		assert(u2.last_name == "Kerrigan")
-
-		u3 = u2.first_name("Harry")
-		Db.update u3
-
-		u4 = Db.find User, "drew"
-		assert(u4.first_name == "Harry")
-
-		Db.delete User, "drew"
-
-		u4 = Db.find User, "drew"
-		assert(u4 == nil)
+	setup do
+		#Abstract into an Elixiak Database type deal?
+		Riak.Supervisor.start_link
+		Db.configure(host: '127.0.0.1', port: 10017)
+		:ok
 	end
 
-	test "save_find_delete" do
-		u = User.new(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
-		Db.put u
-
-		u2 = Db.find User, "drew"
-		assert(u2.last_name == "Kerrigan")
-
-		Db.delete User, "drew"
-
-		u3 = Db.find User, "drew"
-		assert(u3 == nil)
+	test "ping" do
+		assert(Db.ping == :pong)
 	end
 
-	test "save_find_delete_nokey" do
-		u = User.new(first_name: "Drew", last_name: "Kerrigan", age: 200)
-		key = Db.put u
+	test "crud operations" do
+		u = User.create(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
+				.save!
 
-		u2 = Db.find User, key
-		assert(u2.last_name == "Kerrigan")
+		assert(u.last_name == "Kerrigan")
+		assert(User.find("drew").first_name == "Drew")
 
-		Db.delete User, key
+		u.first_name("Harry").save!
 
-		u3 = Db.find User, key
-		assert(u3 == nil)
-	end
+		assert(User.find("drew").first_name == "Harry")
 
-	test "alternate_delete" do
-		u = User.new(first_name: "Drew", last_name: "Kerrigan", age: 200)
-		key = Db.put u
+		u.delete!
 
-		u2 = Db.find User, key
-		assert(u2.last_name == "Kerrigan")
+		assert(User.find("drew") == nil)
 
-		Db.delete u2
+		u = User.create(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
+			.save!
 
-		u3 = Db.find User, key
-		assert(u3 == nil)
+		assert(User.find("drew").first_name == "Drew")
+
+		User.delete "drew"
+
+		assert(User.find("drew") == nil)
 	end
 end

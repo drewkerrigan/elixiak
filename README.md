@@ -1,6 +1,6 @@
 # Elixiak
 
-Elixir wrapper for riak-erlang-client
+An OO-dispatch style active-record-like wrapper for riak-elixir-client. If you prefer pure functional style usage, please use riak-elixir-client.
 
 ###Setup
 
@@ -24,12 +24,11 @@ Compile
 mix
 ```
 
-###Create a reference to your Riak instance
+###Connect to Riak
 
 ```
-defmodule Db do
-	use Elixiak.Database, host: '127.0.0.1', port: 8087
-end
+Riak.Supervisor.start_link
+Db.configure(host: '127.0.0.1', port: 10017)
 ```
 
 ###Create a model with an embedded document
@@ -38,13 +37,13 @@ This functionality is inspired by and derived from [Ecto](https://github.com/eli
 
 ```
 defmodule User do
-	use Elixiak.Model
+  use Elixiak.Model
 
-	document "user" do
-		field :first_name, :string
-		field :last_name, :string
-		field :age, :integer, default: 18
-	end
+  document "user" do
+    field :first_name, :string
+    field :last_name, :string
+    field :age, :integer, default: 18
+  end
 end
 ```
 
@@ -53,36 +52,26 @@ end
 With a key
 
 ```
-user = User.new(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200)
-Db.put user
+User.create(key: "drew", first_name: "Drew", last_name: "Kerrigan", age: 200).save!
 ```
 
 Without a key
 
 ```
-user = User.new(first_name: "Drew", last_name: "Kerrigan", age: 200)
-key = Db.put user
+user = User.create(first_name: "Drew", last_name: "Kerrigan", age: 200).save!
+user.key
 ```
 
 From JSON
 
 ```
-user = User.unserialize(json_string)
-Db.put user
+User.from_json(json_string).save!
 ```
 
 ###Find an object
 
 ```
-user = Db.find User, key
-assert(u2.last_name == "Kerrigan")
-```
-
-###Update an object
-
-```
-user = user.first_name("Harry")
-Db.update user
+User.find(key)
 ```
 
 ###Delete an object
@@ -90,13 +79,13 @@ Db.update user
 Using key
 
 ```
-Db.delete User, key
+User.delete key
 ```
 
 Or object
 
 ```
-Db.delete user
+user.delete!
 ```
 
 ###Run tests
