@@ -13,7 +13,7 @@ defmodule ElixiakTest do
 
 	setup do
 		#Abstract into an Elixiak Database module?
-		Riak.Supervisor.start_link
+		Riak.start
 		Db.configure(host: '127.0.0.1', port: 10017)
 		:ok
 	end
