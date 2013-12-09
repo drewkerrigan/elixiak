@@ -50,19 +50,21 @@ defmodule Elixiak.Model do
 				add_indexes(o.model.Obj.__obj__(:indexes), o)
 			end
 
+			def from_robj(nil) do
+				nil
+			end
+			def from_robj(robj) when is_list(robj) do
+				robj
+			end
 			def from_robj(robj) do
-				case robj do
-					nil -> nil
-					robj -> 
-						{:ok, decoded} = JSON.decode(robj.data)
+				{:ok, decoded} = JSON.decode(robj.data)
 
-						add_indexes(__MODULE__.new(Util.list_to_args(HashDict.to_list(decoded), []))
-							.key(robj.key)
-							.metadata(robj.metadata)
-							.vclock(robj.vclock)
-							.bucket(robj.bucket)
-							.content_type(robj.content_type))
-				end
+				add_indexes(__MODULE__.new(Util.list_to_args(HashDict.to_list(decoded), []))
+					.key(robj.key)
+					.metadata(robj.metadata)
+					.vclock(robj.vclock)
+					.bucket(robj.bucket)
+					.content_type(robj.content_type))
 			end
 
 			def create() do
